@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GP Email Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button.delete-btn {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+
+        button.delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        /* Autocomplete Styles */
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 0 0 4px 4px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .autocomplete-item:hover {
+            background-color: #e9e9e9;
+        }
+
+        .autocomplete-active {
+            background-color: #3498db !important;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+    <style>
+        /* ... existing styles ... */
+        .nav-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .nav-link {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 600;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 4px 4px 0 0;
+            background: #e9ecef;
+        }
+
+        .nav-link.active {
+            background: white;
+            color: #2c3e50;
+            border-color: #ddd;
+            border-bottom-color: white;
+            /* Hide bottom border to merge with card */
+            margin-bottom: -2px;
+            /* Overlap the line */
+            z-index: 10;
+        }
+
+        .nav-link:hover {
+            background-color: #dfe6e9;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>GP Email Manager</h1>
+
+    <div class="nav-tabs">
+        <a href="/invoices" class="nav-link {{ 'active' if mode == 'invoices' else '' }}">Invoices (Customers)</a>
+        <a href="/purchasing" class="nav-link {{ 'active' if mode == 'purchasing' else '' }}">Purchasing (Vendors)</a>
+    </div>
+
+    <div class="card" style="margin-bottom: 20px;">
+        <h3>Global Email Configuration</h3>
+        <p style="color: #666; font-size: 0.9em;">These emails will be CC'd on ALL emails sent.</p>
+        <form action="/save_global" method="POST">
+            <input type="hidden" name="mode" value="{{ mode }}">
+            <div class="form-group" style="flex: 1;">
+                <label>Global CC (comma separated)</label>
+                <input type="text" name="global_cc" value="{{ global_cc }}" placeholder="manager@example.com">
+            </div>
+            <button type="submit">Save Global</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Add / Update {{ entity_name }} Email</h3>
+        <form action="/save" method="POST">
+            <input type="hidden" name="mode" value="{{ mode }}">
+            <div class="form-group" style="flex: 1; position: relative;">
+                <label>{{ entity_name }} ID</label>
+                <input type="text" id="entityIdInput" name="entity_id" placeholder="Start typing ID or Name..." required
+                    autocomplete="off">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            <div class="form-group" style="flex: 1.5;">
+                <label>To (comma separated)</label>
+                <input type="text" name="email_to" placeholder="primary@example.com, other@example.com" required>
+            </div>
+
+            <button type="submit">Save</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Current Mappings</h3>
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search..." class="search-box">
+
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">{{ entity_name }} ID</th>
+                    <th style="width: 35%;">To</th>
+                    <th style="width: 35%;">CC</th>
+                    <th style="width: 10%;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for id, config in mappings.items() %}
+                <tr>
+                    <td><strong>{{ id }}</strong></td>
+                    <td style="word-break: break-all;">
+                        {% if config is string %}
+                        {{ config }}
+                        {% else %}
+                        {{ config.to }}
+                        {% endif %}
+                    </td>
+                    <td style="word-break: break-all;">
+                        {% if config is mapping %}
+                        {{ config.cc }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="/delete" method="POST" style="margin:0;">
+                            <input type="hidden" name="mode" value="{{ mode }}">
+                            <input type="hidden" name="entity_id" value="{{ id }}">
+                            <button type="submit" class="delete-btn"
+                                onclick="return confirm('Are you sure?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Pass entities from backend to JS - NOW EMPTY initially
+        const MAPPINGS = {{ mappings | tojson}};
+        const CURRENT_MODE = "{{ mode }}";
+        const OTHER_MODE = CURRENT_MODE === 'invoices' ? 'purchasing' : 'invoices';
+        const OTHER_MODE_NAME = CURRENT_MODE === 'invoices' ? 'Vendors' : 'Customers';
+
+        function initAutocomplete() {
+            const inp = document.getElementById("entityIdInput");
+            let currentFocus = -1;
+            let debounceTimer;
+
+            // Check URL for initial search
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialQ = urlParams.get('q');
+            if (initialQ) {
+                inp.value = initialQ;
+                // Wait a bit for page to settle then search
+                setTimeout(() => fetchEntities(initialQ), 500);
+            }
+
+            inp.addEventListener("input", function (e) {
+                let val = this.value;
+                closeAllLists();
+                if (!val) { return false; }
+                currentFocus = -1;
+
+                // Debounce the search
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchEntities(val);
+                }, 300);
+            });
+
+            function escapeHtml(text) {
+                if (!text) return text;
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function fetchEntities(query) {
+                // 1. Search Current Mode
+                fetch(`/api/search?mode=${CURRENT_MODE}&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        closeAllLists();
+                        let a = document.getElementById("autocomplete-list");
+                        if (!a) return;
+
+                        // Render current mode results
+                        if (data.length > 0) {
+                            renderList(data, a, inp);
+                        } else if (data.length === 0) {
+                            // Placeholder if no current results, to be removed if other results found or kept
+                            const b = document.createElement("div");
+                            b.className = "autocomplete-item";
+                            b.style.color = "#999";
+                            b.style.cursor = "default";
+                            b.innerText = "No local matches.";
+                            b.id = "no-matches-placeholder";
+                            a.appendChild(b);
+                        }
+
+                        // 2. Search OTHER mode (Parallel check)
+                        fetch(`/api/search?mode=${OTHER_MODE}&q=${encodeURIComponent(query)}`)
+                            .then(resp => resp.json())
+                            .then(otherData => {
+                                if (otherData.length > 0) {
+                                    // Remove "No matches" placeholder if it exists
+                                    const placeholder = document.getElementById("no-matches-placeholder");
+                                    if (placeholder) placeholder.remove();
+
+                                    // Show suggestion to switch
+                                    // Make it distinct
+                                    const b = document.createElement("div");
+                                    b.className = "autocomplete-item";
+                                    b.style.backgroundColor = "#e8f4fd"; // Light blue distinct from yellow
+                                    b.style.color = "#0056b3";
+                                    b.style.borderTop = "2px solid #b8daff";
+                                    b.style.fontWeight = "600";
+
+                                    // Show first match example to be helpful
+                                    const firstMatch = otherData[0].id; // e.g. "YARA"
+                                    b.innerHTML = `<span>Example: <strong>${firstMatch}</strong> found in ${OTHER_MODE_NAME}.</span> <br><span style="font-weight:normal; font-size:0.9em; display:block; margin-top:4px;">Click to switch to ${OTHER_MODE_NAME}.</span>`;
+
+                                    b.addEventListener("click", function () {
+                                        window.location.href = `/${OTHER_MODE}?q=${encodeURIComponent(query)}`;
+                                    });
+                                    // Append at the bottom
+                                    a.appendChild(b);
+                                }
+                            });
+                    })
+                    .catch(err => console.error("Search error:", err));
+            }
+
+            function renderList(data, container, inputField) {
+                for (let i = 0; i < data.length; i++) {
+                    const id = data[i].id;
+                    const name = data[i].name;
+                    const gpEmail = data[i].gp_email;
+
+                    const b = document.createElement("div");
+                    b.className = "autocomplete-item";
+                    b.innerHTML = `<strong>${escapeHtml(id)}</strong> - ${escapeHtml(name)}`;
+                    b.dataset.id = id;
+                    b.dataset.email = gpEmail;
+
+                    b.addEventListener("click", function (e) {
+                        const selectedId = this.dataset.id;
+                        const selectedGpEmail = this.dataset.email;
+
+                        inputField.value = selectedId;
+
+                        // Auto-populate email if exists
+                        const emailInput = document.querySelector('input[name="email_to"]');
+                        if (MAPPINGS[selectedId] && emailInput) {
+                            const config = MAPPINGS[selectedId];
+                            let toEmail = "";
+                            if (typeof config === 'string') {
+                                toEmail = config;
+                            } else {
+                                toEmail = config.to || "";
+                            }
+                            emailInput.value = toEmail;
+                        }
+                        else if (emailInput) {
+                            if (selectedGpEmail) {
+                                emailInput.value = selectedGpEmail;
+                            } else {
+                                emailInput.value = "";
+                            }
+                        }
+                        closeAllLists();
+                    });
+                    container.appendChild(b);
+                }
+            }
+
+            function escapeHtml(text) {
+                if (!text) return "";
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            inp.addEventListener("keydown", function (e) {
+                let x = document.getElementById("autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) { // DOWN
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.keyCode == 38) { // UP
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.keyCode == 13) { // ENTER
+                    e.preventDefault();
+                    if (currentFocus > -1) {
+                        if (x) x[currentFocus].click();
+                    }
+                }
+            });
+
+            function addActive(x) {
+                if (!x) return false;
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (x.length - 1);
+                x[currentFocus].classList.add("autocomplete-active");
+                x[currentFocus].scrollIntoView({ block: "nearest" });
+            }
+
+            function removeActive(x) {
+                for (var i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+
+            function closeAllLists(elmnt) {
+                const list = document.getElementById("autocomplete-list");
+                while (list.firstChild) {
+                    list.removeChild(list.firstChild);
+                }
+            }
+
+            document.addEventListener("click", function (e) {
+                if (e.target !== inp) {
+                    closeAllLists();
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initAutocomplete);
+
+        function filterTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("dataTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

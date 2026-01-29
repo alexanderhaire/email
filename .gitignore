@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.log
+.env
+last_invoice_check.txt
+last_po_check.txt
+last_processed.txt
+processed_pos.json
+*.docx
+desktop.ini
