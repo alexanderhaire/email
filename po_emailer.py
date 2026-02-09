@@ -428,22 +428,31 @@ def send_po_email(po):
         print(f"    [CRITICAL SAFETY] Attempted to send to {final_to} but REDIRECT_EMAILS is True. BLOCKED.")
         return False
         
-    try:
-        email_params = {
-            "from": f"{FROM_NAME} <{FROM_EMAIL}>",
-            "to": final_to,
-            "subject": f"{subject_prefix}Purchase Order #{po['number']} from {FROM_NAME}",
-            "html": html_content
-        }
-        
-        if final_cc:
-             email_params["cc"] = final_cc
-             
-        resend.Emails.send(email_params)
-        return True
-    except Exception as e:
-        print(f"    ✗ Failed to send email: {e}")
-        return False
+    # Retry Loop for Network Reliability
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            email_params = {
+                "from": f"{FROM_NAME} <{FROM_EMAIL}>",
+                "to": final_to,
+                "subject": f"{subject_prefix}Purchase Order #{po['number']} from {FROM_NAME}",
+                "html": html_content
+            }
+            
+            if final_cc:
+                 email_params["cc"] = final_cc
+                 
+            resend.Emails.send(email_params)
+            return True
+        except Exception as e:
+            print(f"    ⚠ Attempt {attempt}/{max_retries} failed: {e}")
+            if attempt < max_retries:
+                wait_time = 2 * attempt # Exponential backoff: 2s, 4s
+                print(f"      Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                print(f"    ✗ Failed after {max_retries} attempts.")
+                return False
 
 def main():
     """Main loop"""

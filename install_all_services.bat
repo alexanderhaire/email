@@ -16,7 +16,7 @@ set "PATH=%PATH%;C:\Program Files\NSSM\win64;C:\Program Files\NSSM"
 
 :: Base Directory
 set "BASE_DIR=c:\Users\alexh\email"
-set "PYTHON_EXE=%BASE_DIR%\.venv\Scripts\python.exe"
+set "PYTHON_EXE=C:\Users\alexh\AppData\Local\Programs\Python\Python312\python.exe"
 
 :: Create logs directory
 if not exist "%BASE_DIR%\logs" mkdir "%BASE_DIR%\logs"

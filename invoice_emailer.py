@@ -196,7 +196,7 @@ def send_invoice_email(invoice):
 
     # 2. Check if we have an email
     if not email_to:
-        print(f"    ⚠ No email for customer {invoice['customer_id']} - skipping")
+        print(f"    [WARN] No email for customer {invoice['customer_id']} - skipping")
         return False
     
     # Update object for display/logging
@@ -369,22 +369,32 @@ def send_invoice_email(invoice):
         print(f"    [CRITICAL SAFETY] Attempted to send to {final_to} but REDIRECT_EMAILS is True. BLOCKED.")
         return False
         
-    try:
-        email_params = {
-            "from": f"{FROM_NAME} <{FROM_EMAIL}>",
-            "to": final_to,
-            "subject": f"{subject_prefix}Invoice #{invoice['number']} from {FROM_NAME}",
-            "html": html_content
-        }
-        
-        if final_cc:
-            email_params["cc"] = final_cc
+    # Retry Loop for Network Reliability
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            email_params = {
+                "from": f"{FROM_NAME} <{FROM_EMAIL}>",
+                "to": final_to,
+                "subject": f"{subject_prefix}Invoice #{invoice['number']} from {FROM_NAME}",
+                "html": html_content
+            }
+            
+            if final_cc:
+                email_params["cc"] = final_cc
 
-        resend.Emails.send(email_params)
-        return True
-    except Exception as e:
-        print(f"    ✗ Failed to send email: {e}")
-        return False
+            resend.Emails.send(email_params)
+            return True
+            
+        except Exception as e:
+            print(f"    ⚠ Attempt {attempt}/{max_retries} failed: {e}")
+            if attempt < max_retries:
+                wait_time = 2 * attempt # Exponential backoff: 2s, 4s
+                print(f"      Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                print(f"    ✗ Failed after {max_retries} attempts.")
+                return False
 
 
 def main():
@@ -397,12 +407,12 @@ def main():
     print(f"  Database: {SQL_DATABASE}")
     
     # Test database connection
-    print("\n→ Connecting to database...")
+    print("\n-> Connecting to database...")
     try:
         conn = pyodbc.connect(get_connection_string())
-        print("  ✓ Connected successfully!")
+        print("  [OK] Connected successfully!")
     except Exception as e:
-        print(f"  ✗ Connection failed: {e}")
+        print(f"  [X] Connection failed: {e}")
         return
     
     # Load last progress
@@ -416,18 +426,18 @@ def main():
             with open(LAST_INVOICE_CHECK_FILE, 'r') as f:
                 ts_str = f.read().strip()
                 last_processed_ts = datetime.fromisoformat(ts_str)
-                print(f"  ✓ Resuming from last check: {ts_str}")
+                print(f"  [OK] Resuming from last check: {ts_str}")
                 
                 # Safety check for future dates
                 if last_processed_ts > (now + timedelta(days=1)):
-                     print(f"  ⚠ Found future date in history. Resetting to NOW.")
+                     print(f"  [WARN] Found future date in history. Resetting to NOW.")
                      last_processed_ts = now
         except Exception as e:
-             print(f"  ⚠ Could not load last check time: {e}")
+             print(f"  [WARN] Could not load last check time: {e}")
              # Default to now if file error, to avoid re-sending old stuff? 
              # Or start of day? Let's do START OF DAY to be safe.
     else:
-        print(f"  ✓ No history found. Monitoring started from: {last_processed_ts} (Start of Day)")
+        print(f"  [OK] No history found. Monitoring started from: {last_processed_ts} (Start of Day)")
     
     print("\n" + "=" * 60)
     print("  MONITORING ACTIVE... (Ctrl+C to stop)")
@@ -476,7 +486,7 @@ def main():
                     with open(LAST_INVOICE_CHECK_FILE, 'w') as f:
                         f.write(last_processed_ts.isoformat())
                 except Exception as e:
-                    print(f"    ⚠ Failed to save checkpoint: {e}")
+                    print(f"    [WARN] Failed to save checkpoint: {e}")
 
             else:
                  # Even if no invoices found, update processed time if we want to move the window?
@@ -485,7 +495,7 @@ def main():
                  pass
             
         except KeyboardInterrupt:
-            print("\n\n→ Stopping...")
+            print("\n\n-> Stopping...")
             break
         except Exception as e:
             print(f"Error in main loop: {e}")

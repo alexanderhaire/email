@@ -11,7 +11,7 @@ echo.
 set "PATH=%PATH%;C:\Program Files\NSSM"
 
 :: Install the service
-nssm install GPInvoiceEmailer "c:\Users\alexh\email\.venv\Scripts\python.exe" "c:\Users\alexh\email\invoice_emailer.py"
+nssm install GPInvoiceEmailer "C:\Users\alexh\AppData\Local\Programs\Python\Python312\python.exe" "c:\Users\alexh\email\invoice_emailer.py"
 
 :: Set the working directory
 nssm set GPInvoiceEmailer AppDirectory "c:\Users\alexh\email"

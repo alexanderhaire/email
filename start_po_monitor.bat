@@ -2,6 +2,6 @@
 echo Starting Dynamics GP Purchase Order Monitor...
 echo =====================================================
 
-.venv\Scripts\python.exe po_emailer.py
+"C:\Users\alexh\AppData\Local\Programs\Python\Python312\python.exe" po_emailer.py
 
 pause

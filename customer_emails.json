@@ -1,11 +1,70 @@
 {
-    "HAPCARSON": "alexh@chemicaldynamics.com",
-    "TEST-CUST": "test@example.com",
-    "BEAUCHAMP": "alexh@chemicaldynamics.com",
-    "AGRIBUSI": "janec@chemicaldynamics.com",
-    "CCCSEED": "janec@chemicaldynamics.com",
-    "GREENRES": "janec@chemicaldynamics.com",
-    "LARRYENN": "janec@chemicaldynamics.com",
-    "PORTER HA": "janec@chemicaldynamics.com",
-    "SOUTHERNHILL": "alexh@chemicaldynamics.com"
+    "HAPCARSON": {
+        "to": "alexh@chemicaldynamics.com",
+        "cc": ""
+    },
+    "TEST-CUST": {
+        "to": "test@example.com",
+        "cc": ""
+    },
+    "AGRIBUSI": {
+        "to": "janec@chemicaldynamics.com",
+        "cc": ""
+    },
+    "CCCSEED": {
+        "to": "janec@chemicaldynamics.com",
+        "cc": ""
+    },
+    "LARRYENN": {
+        "to": "janec@chemicaldynamics.com",
+        "cc": ""
+    },
+    "PORTER HA": {
+        "to": "janec@chemicaldynamics.com",
+        "cc": ""
+    },
+    "SOUTHERNHILL": {
+        "to": "alexh@chemicaldynamics.com",
+        "cc": ""
+    },
+    "FORTGREENFARMS": {
+        "to": "alexh@chemicaldynamics.com",
+        "cc": ""
+    },
+    "TRIANGLE": {
+        "to": "lindseys@chemicaldyanmics.com, janec@chemicaldynamics.com, grbyrd@trianglecc.com, dlming@trianglecc.com",
+        "cc": ""
+    },
+    "PETROCAN": {
+        "to": "Amanda.Gyles@HFSinclair.com; lindseys@chemicaldynamics.com",
+        "cc": ""
+    },
+    "MAYO": {
+        "to": "erik@mayoag.com; layla@mayoag.com; ar@chemicaldynamics.com",
+        "cc": ""
+    },
+    "GOLFVENTURES": {
+        "to": "deliveryconfirmation@golfv.com, dwilliams@mggi.com, coles@chemicaldynamics.com, ar@chemicaldynamics.com, davidc@chemicaldynamics.com",
+        "cc": ""
+    },
+    "COASTALAGSUPPLY": {
+        "to": "lhanna@coastagsupply.com;robin@highlandag.com;lindseys@chemicaldynamics.com",
+        "cc": ""
+    },
+    "ASTINFAR": {
+        "to": "lpippin@strawberryexchange.com, suzanne@strawberryexchange.com, pastin@strawberryexchange.com",
+        "cc": ""
+    },
+    "GREENRES": {
+        "to": "jjcoggins@green-resource.com",
+        "cc": ""
+    },
+    "BERRYBLISS": {
+        "to": "lwilliamspc@gmail.com",
+        "cc": ""
+    },
+    "MPBFARMS": {
+        "to": "lpippin@strawberryexchange.com, PAstin@strawberryexchange.com, suzanne@strawberryexchange.com",
+        "cc": ""
+    }
 }
