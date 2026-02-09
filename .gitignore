@@ -1,10 +1,34 @@
-.venv/
+# Python
 __pycache__/
-*.log
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Environment Variables
 .env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# IDE Settings
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project Specific
 last_invoice_check.txt
 last_po_check.txt
 last_processed.txt
 processed_pos.json
 *.docx
-desktop.ini
