@@ -239,129 +239,265 @@ def send_invoice_email(invoice):
 
     # Format the email
     html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f8;">
-        
-        <div style="max-width: 680px; margin: 40px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;">
-            
-            <!-- Company Header -->
-            <div style="background: #ffffff; padding: 40px 40px 20px 40px; border-bottom: 1px solid #f0f0f0;">
-                <table width="100%">
-                    <tr>
-                        <td>
-                            <h1 style="margin: 0; color: #0f172a; font-size: 24px; letter-spacing: -0.5px;">Chemical Dynamics, Inc.</h1>
-                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">4206 Business Lane <br> Plant City, FL 33566</p>
-                        </td>
-                        <td style="text-align: right; vertical-align: top;">
-                            <div style="background: #e0f2fe; color: #0284c7; padding: 6px 12px; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">INVOICE</div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            
-            <!-- Invoice Details Banner -->
-            <div style="background: #f8fafc; padding: 30px 40px; border-bottom: 1px solid #f0f0f0;">
-                <table width="100%">
-                    <tr>
-                        <td width="33%">
-                            <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Amount Due</p>
-                            <p style="margin: 0; font-size: 24px; font-weight: 700; color: #0f172a;">${invoice['amount']:,.2f}</p>
-                        </td>
-                        <td width="33%">
-                            <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Invoice Number</p>
-                            <p style="margin: 0; font-size: 16px; color: #334155;">#{invoice['number']}</p>
-                        </td>
-                         <td width="33%">
-                            <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Date</p>
-                            <p style="margin: 0; font-size: 16px; color: #334155;">{invoice_date}</p>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+   <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Invoice</title>
+  </head>
 
-            <!-- Content Area -->
-            <div style="padding: 40px;">
-                
-                <!-- Bill To -->
-                <table width="100%" style="margin-bottom: 30px;">
-                    <tr>
-                        <td>
-                             <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Bill To</p>
-                             <h3 style="margin: 0; color: #334155; font-size: 18px;">{invoice['customer_name']}</h3>
-                             <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Customer ID: {invoice['customer_id']}</p>
-                        </td>
-                         <td style="text-align: right; vertical-align: bottom;">
-                            <p style="margin: 0; color: #64748b; font-size: 14px;">PO #: <strong style="color: #334155;">{po_display}</strong></p>
-                        </td>
-                    </tr>
+  <body style="margin:0; padding:0; background-color:#f4f6f8;">
+    <!-- Preheader (hidden) -->
+    <div style="display:none; font-size:1px; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden; mso-hide:all;">
+      Invoice #{invoice['number']} from Chemical Dynamics.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f6f8; margin:0; padding:0;">
+      <tr>
+        <td align="center" style="padding:40px 12px;">
+          <!-- Container -->
+          <table role="presentation" width="680" cellpadding="0" cellspacing="0" border="0" style="width:680px; max-width:680px; background:#ffffff; border-radius:8px; overflow:hidden;">
+            <!-- Header -->
+            <tr>
+              <td style="padding:40px 40px 20px 40px; border-bottom:1px solid #f0f0f0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="left" style="vertical-align:top;"></td>
+                    <td align="right" style="vertical-align:top;">
+                      <div style="background:#e0f2fe; color:#0284c7; padding:6px 12px; border-radius:4px; display:inline-block; font-weight:600; font-size:13px; font-family:Helvetica, Arial, sans-serif;">
+                        INVOICE
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td colspan="2" align="center" style="padding-top:12px;">
+                      <img
+                        src="https://www.chemicaldynamics.com/wp-content/uploads/2022/10/CD-logo-350x20-NEW2-1.png"
+                        width="220"
+                        alt="Chemical Dynamics Inc."
+                        style="display:block; border:0; outline:none; text-decoration:none; height:auto; width:220px; max-width:220px;"
+                      />
+                      <p style="margin:8px 0 0 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">
+                        P.O. Box 486
+                      </p>
+                      <p style="margin:5px 0 0 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">
+                        Plant City, FL 33564-0468
+                      </p>
+                      <p style="margin:5px 0 0 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">
+                        Phone:
+                        <a href="tel:+18137524950" style="color:#2563eb; text-decoration:underline; font-weight:600;">
+                          1-813-752-4950
+                        </a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Bill/Ship + Summary Banner -->
+            <tr>
+              <td style="background:#f8fafc; padding:30px 40px; border-bottom:1px solid #f0f0f0;">
+                <!-- PO row -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="right" style="padding:0 0 12px 0;">
+                      <p style="margin:0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">
+                        PO #:
+                        <strong style="color:#334155;">{po_display}</strong>
+                      </p>
+                    </td>
+                  </tr>
                 </table>
 
+                <!-- Bill To / Ship To -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
+                  <tr>
+                    <td width="50%" valign="top" style="padding-right:20px;">
+                      <p style="margin:0 0 8px 0; font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:600; letter-spacing:0.5px; font-family:Helvetica, Arial, sans-serif;">
+                        Bill To
+                      </p>
+
+                      <p style="margin:0; color:#334155; font-size:14px; font-weight:700; font-family:Helvetica, Arial, sans-serif;">
+                        {invoice['customer_name']}
+                      </p>
+                      <p style="margin:4px 0 0 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">
+                        Customer ID: {invoice['customer_id']}
+                      </p>
+
+                      <p style="margin:10px 0 0 0; color:#64748b; font-size:14px; line-height:20px; font-family:Helvetica, Arial, sans-serif;">
+                        {invoice['billing_address_line1']}<br />
+                        {invoice['billing_address_line2']}<br />
+                        {invoice['billing_city']}, {invoice['billing_state']} {invoice['billing_zip']}
+                      </p>
+                    </td>
+
+                    <td width="50%" valign="top" style="padding-left:20px;">
+                      <p style="margin:0 0 8px 0; font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:600; letter-spacing:0.5px; font-family:Helvetica, Arial, sans-serif;">
+                        Ship To
+                      </p>
+
+                      <p style="margin:0; color:#334155; font-size:14px; font-weight:700; font-family:Helvetica, Arial, sans-serif;">
+                        {invoice['ship_to_name']}
+                      </p>
+
+                      <p style="margin:10px 0 0 0; color:#64748b; font-size:14px; line-height:20px; font-family:Helvetica, Arial, sans-serif;">
+                        {invoice['ship_to_address_line1']}<br />
+                        {invoice['ship_to_address_line2']}<br />
+                        {invoice['ship_to_city']}, {invoice['ship_to_state']} {invoice['ship_to_zip']}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Summary -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="33%" valign="top">
+                      <p style="margin:0 0 5px 0; font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:600; letter-spacing:0.5px; font-family:Helvetica, Arial, sans-serif;">
+                        Amount Due
+                      </p>
+                      <p style="margin:0; font-size:24px; font-weight:700; color:#0f172a; font-family:Helvetica, Arial, sans-serif;">
+                        ${invoice['amount']:,.2f}
+                      </p>
+                    </td>
+
+                    <td width="33%" valign="top">
+                      <p style="margin:0 0 5px 0; font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:600; letter-spacing:0.5px; font-family:Helvetica, Arial, sans-serif;">
+                        Invoice Number
+                      </p>
+                      <p style="margin:0; font-size:16px; color:#334155; font-family:Helvetica, Arial, sans-serif;">
+                        #{invoice['number']}
+                      </p>
+                    </td>
+
+                    <td width="33%" valign="top">
+                      <p style="margin:0 0 5px 0; font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:600; letter-spacing:0.5px; font-family:Helvetica, Arial, sans-serif;">
+                        Invoice Date
+                      </p>
+                      <p style="margin:0; font-size:16px; color:#334155; font-family:Helvetica, Arial, sans-serif;">
+                        {invoice_date}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style="padding:40px;">
                 <!-- Line Items -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; font-size: 14px;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 10px 15px; text-align: left; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px; border-radius: 4px 0 0 4px;">ITEM</th>
-                            <th style="padding: 10px 15px; text-align: left; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px;">DESCRIPTION</th>
-                            <th style="padding: 10px 15px; text-align: center; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px;">QTY</th>
-                            <th style="padding: 10px 15px; text-align: right; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px;">RATE</th>
-                            <th style="padding: 10px 15px; text-align: right; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px; border-radius: 0 4px 4px 0;">AMOUNT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {lines_html}
-                    </tbody>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 30px 0; font-size:14px; font-family:Helvetica, Arial, sans-serif;">
+                  <thead>
+                    <tr>
+                      <th align="left" style="padding:10px 15px; background:#f8fafc; color:#64748b; font-weight:600; font-size:12px; border-radius:4px 0 0 4px;">
+                        ITEM
+                      </th>
+                      <th align="left" style="padding:10px 15px; background:#f8fafc; color:#64748b; font-weight:600; font-size:12px;">
+                        DESCRIPTION
+                      </th>
+                      <th align="center" style="padding:10px 15px; background:#f8fafc; color:#64748b; font-weight:600; font-size:12px;">
+                        QTY
+                      </th>
+                      <th align="right" style="padding:10px 15px; background:#f8fafc; color:#64748b; font-weight:600; font-size:12px;">
+                        UNIT PRICE
+                      </th>
+                      <th align="right" style="padding:10px 15px; background:#f8fafc; color:#64748b; font-weight:600; font-size:12px; border-radius:0 4px 4px 0;">
+                        AMOUNT
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- TERM row (static) -->
+                    <tr>
+                      <td style="padding:10px 15px; border-bottom:1px solid #e2e8f0; color:#64748b; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+                        TERM
+                      </td>
+                      <td colspan="4" style="padding:10px 15px; border-bottom:1px solid #e2e8f0; color:#334155; font-size:14px; font-weight:600;">
+                        Net 30
+                      </td>
+                    </tr>
+
+                    <!-- Line item rows -->
+                    {lines_html}
+                  </tbody>
                 </table>
 
                 <!-- Totals -->
-                <table width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td width="55%">
-                            <!-- Blank space -->
-                        </td>
-                        <td width="45%">
-                            <table width="100%">
-                                <tr>
-                                    <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Subtotal</td>
-                                    <td style="padding: 5px 0; text-align: right; color: #334155; font-size: 14px; font-weight: 500;">${invoice['subtotal']:,.2f}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Freight</td>
-                                    <td style="padding: 5px 0; text-align: right; color: #334155; font-size: 14px; font-weight: 500;">${invoice['freight']:,.2f}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px 0; color: #64748b; font-size: 14px;">Tonnage, Nitrate & Sales Tax</td>
-                                    <td style="padding: 5px 0; text-align: right; color: #334155; font-size: 14px; font-weight: 500;">${invoice['tax']:,.2f}</td>
-                                </tr>
-                                {f'<tr><td style="padding: 5px 0; color: #ef4444; font-size: 14px;">Discount</td><td style="padding: 5px 0; text-align: right; color: #ef4444; font-size: 14px; font-weight: 500;">-${invoice["discount"]:,.2f}</td></tr>' if invoice['discount'] > 0 else ''}
-                                <tr>
-                                    <td style="padding: 15px 0 0 0; border-top: 2px solid #e2e8f0; color: #0f172a; font-weight: 700; font-size: 16px;">Total</td>
-                                    <td style="padding: 15px 0 0 0; border-top: 2px solid #e2e8f0; text-align: right; color: #0f172a; font-weight: 700; font-size: 18px;">${invoice['amount']:,.2f}</td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="55%"></td>
+                    <td width="45%">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding:5px 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">Subtotal</td>
+                          <td align="right" style="padding:5px 0; color:#334155; font-size:14px; font-weight:500; font-family:Helvetica, Arial, sans-serif;">
+                            ${invoice['subtotal']:,.2f}
+                          </td>
+                        </tr>
 
-            <!-- Footer & Terms -->
-            <div style="background: #f8fafc; padding: 30px 40px; border-top: 1px solid #f0f0f0;">
-                <h4 style="margin: 0 0 10px 0; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase;">Terms & Conditions</h4>
-                <p style="margin: 0; color: #64748b; font-size: 11px; line-height: 1.6; text-align: justify;">
-                    TERMS: NET 30 DAYS. A finance charge of 1½% per month (18% per annum) will be charged on all past due accounts. 
-                    In the event it becomes necessary to enforce collection of this invoice, the purchaser agrees to pay all costs 
-                    of collection, including reasonable attorney's fees. "WE APPRECIATE YOUR BUSINESS"
+                        <tr>
+                          <td style="padding:5px 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">Freight</td>
+                          <td align="right" style="padding:5px 0; color:#334155; font-size:14px; font-weight:500; font-family:Helvetica, Arial, sans-serif;">
+                            ${invoice['freight']:,.2f}
+                          </td>
+                        </tr>
+
+                        <tr>
+                          <td style="padding:5px 0; color:#64748b; font-size:14px; font-family:Helvetica, Arial, sans-serif;">Tonnage, Nitrate &amp; Sales Tax</td>
+                          <td align="right" style="padding:5px 0; color:#334155; font-size:14px; font-weight:500; font-family:Helvetica, Arial, sans-serif;">
+                            ${invoice['tax']:,.2f}
+                          </td>
+                        </tr>
+
+                        <!-- Optional discount row: inject "" if none -->
+                        {discount_row}
+
+                        <tr>
+                          <td style="padding:15px 0 0 0; border-top:2px solid #e2e8f0; color:#0f172a; font-weight:700; font-size:16px; font-family:Helvetica, Arial, sans-serif;">
+                            Total
+                          </td>
+                          <td align="right" style="padding:15px 0 0 0; border-top:2px solid #e2e8f0; color:#0f172a; font-weight:700; font-size:18px; font-family:Helvetica, Arial, sans-serif;">
+                            ${invoice['amount']:,.2f}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background:#f8fafc; padding:30px 40px; border-top:1px solid #f0f0f0;">
+                <h4 style="margin:0 0 10px 0; color:#475569; font-size:12px; font-weight:700; text-transform:uppercase; font-family:Helvetica, Arial, sans-serif;">
+                  Terms &amp; Conditions
+                </h4>
+
+                <p style="margin:0; color:#64748b; font-size:11px; line-height:1.6; font-family:Helvetica, Arial, sans-serif;">
+                  TERMS: NET 30 DAYS. A finance charge of 1&#189;% per month (18% per annum) will be charged on all past due accounts.
+                  In the event it becomes necessary to enforce collection of this invoice, the purchaser agrees to pay all costs
+                  of collection, including reasonable attorney's fees. "WE APPRECIATE YOUR BUSINESS"
                 </p>
-                
-                <div style="margin-top: 20px; text-align: center; color: #94a3b8; font-size: 12px;">
-                    <p style="margin: 0;">Chemical Dynamics, Inc. &bull; 4206 Business Lane &bull; Plant City, FL 33566</p>
-                </div>
-            </div>
-            
-        </div>
-        
-    </body>
-    </html>
+
+                <p style="margin:20px 0 0 0; text-align:center; color:#94a3b8; font-size:12px; font-family:Helvetica, Arial, sans-serif;">
+                  Chemical Dynamics, Inc. &bull; 4206 Business Lane &bull; Plant City, FL 33566
+                </p>
+              </td>
+            </tr>
+          </table>
+          <!-- /Container -->
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
     """
     
     # FINAL SAFETY CHECK
