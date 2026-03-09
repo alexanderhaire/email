@@ -21,6 +21,48 @@ from config import (
 
 # Configuration for Invoices
 LAST_INVOICE_CHECK_FILE = "last_invoice_check.txt"
+SENT_INVOICES_DB = "sent_invoices.db"
+
+import sqlite3
+
+def init_tracking_db():
+    """Initialize SQLite DB for tracking sent invoices"""
+    try:
+        with sqlite3.connect(SENT_INVOICES_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS sent_invoices (
+                    invoice_number TEXT PRIMARY KEY,
+                    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+    except Exception as e:
+        print(f"Error initializing tracking DB: {e}")
+
+def is_invoice_sent(invoice_number):
+    """Check if invoice has already been sent"""
+    try:
+        with sqlite3.connect(SENT_INVOICES_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM sent_invoices WHERE invoice_number = ?", (invoice_number,))
+            return cursor.fetchone() is not None
+    except Exception as e:
+        print(f"Error checking invoice status: {e}")
+        return False # Default to NOT sent if DB fails, to be safe? Or fail safe? 
+                     # Safe = Don't send? No, Safe = Send (duplicate is better than missed).
+                     # But here we want to dedupe. If DB fails, we probably shouldn't block.
+        return False
+
+def mark_invoice_sent(invoice_number):
+    """Mark invoice as sent in DB"""
+    try:
+        with sqlite3.connect(SENT_INVOICES_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT OR IGNORE INTO sent_invoices (invoice_number) VALUES (?)", (invoice_number,))
+            conn.commit()
+    except Exception as e:
+        print(f"Error marking invoice as sent: {e}")
 
 
 
@@ -242,16 +284,25 @@ def send_invoice_email(invoice):
     <!DOCTYPE html>
     <html>
     <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f6f8;">
-        
+
         <div style="max-width: 680px; margin: 40px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;">
-            
+
+            <!-- Logo Header -->
+            <div style="background: #ffffff; padding: 30px 40px 20px 40px; text-align: center; border-bottom: 1px solid #f0f0f0;">
+                <img src="https://www.chemicaldynamics.com/wp-content/uploads/2022/10/CD-logo-350x20-NEW2-1.png"
+                     width="220"
+                     alt="Chemical Dynamics Inc."
+                     style="display: inline-block; border: 0; outline: none; text-decoration: none; height: auto; max-width: 220px;" />
+                <p style="margin: 10px 0 0 0; color: #64748b; font-size: 13px;">P.O. Box 486<br>Plant City, FL 33564-0468<br>Phone: 1-813-752-4960</p>
+            </div>
+
             <!-- Company Header -->
-            <div style="background: #ffffff; padding: 40px 40px 20px 40px; border-bottom: 1px solid #f0f0f0;">
+            <div style="background: #ffffff; padding: 20px 40px 20px 40px; border-bottom: 1px solid #f0f0f0;">
                 <table width="100%">
                     <tr>
-                        <td>
-                            <h1 style="margin: 0; color: #0f172a; font-size: 24px; letter-spacing: -0.5px;">Chemical Dynamics, Inc.</h1>
-                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">4206 Business Lane <br> Plant City, FL 33566</p>
+                        <td style="vertical-align: top;">
+                            <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">PO #</p>
+                            <p style="margin: 0; font-size: 16px; color: #334155; font-weight: 600;">{po_display}</p>
                         </td>
                         <td style="text-align: right; vertical-align: top;">
                             <div style="background: #e0f2fe; color: #0284c7; padding: 6px 12px; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">INVOICE</div>
@@ -282,17 +333,18 @@ def send_invoice_email(invoice):
 
             <!-- Content Area -->
             <div style="padding: 40px;">
-                
-                <!-- Bill To -->
+
+                <!-- Bill To & Ship To -->
                 <table width="100%" style="margin-bottom: 30px;">
                     <tr>
-                        <td>
+                        <td width="50%" style="vertical-align: top; padding-right: 20px;">
                              <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Bill To</p>
-                             <h3 style="margin: 0; color: #334155; font-size: 18px;">{invoice['customer_name']}</h3>
+                             <h3 style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">{invoice['customer_name']}</h3>
                              <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Customer ID: {invoice['customer_id']}</p>
                         </td>
-                         <td style="text-align: right; vertical-align: bottom;">
-                            <p style="margin: 0; color: #64748b; font-size: 14px;">PO #: <strong style="color: #334155;">{po_display}</strong></p>
+                        <td width="50%" style="vertical-align: top; padding-left: 20px;">
+                             <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Ship To</p>
+                             <h3 style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">{invoice['customer_name']}</h3>
                         </td>
                     </tr>
                 </table>
@@ -439,6 +491,10 @@ def main():
     else:
         print(f"  [OK] No history found. Monitoring started from: {last_processed_ts} (Start of Day)")
     
+    # Initialize DB
+    init_tracking_db()
+
+    
     print("\n" + "=" * 60)
     print("  MONITORING ACTIVE... (Ctrl+C to stop)")
     print("=" * 60 + "\n")
@@ -457,24 +513,29 @@ def main():
                 for i, invoice in enumerate(new_invoices):
                     print(f"  → Invoice #{invoice['number']} - ${invoice['amount']:,.2f} to {invoice['customer_name']}")
                     
-                    if send_invoice_email(invoice):
-                         print(f"    ✓ Email sent to {invoice['email']}")
-                         emails_sent_in_batch += 1
-                         
-                         # Throttling: Add delay between emails (except after the last one)
-                         if i < len(new_invoices) - 1:
-                             # Check if we need a longer batch pause
-                             if emails_sent_in_batch >= BATCH_SIZE:
-                                 print(f"    ⏸ Batch pause: waiting {BATCH_PAUSE_SECONDS}s after {BATCH_SIZE} emails...")
-                                 time.sleep(BATCH_PAUSE_SECONDS)
-                                 emails_sent_in_batch = 0
-                             else:
-                                 # print(f"    ⏳ Throttling: waiting {EMAIL_DELAY_SECONDS}s...")
-                                 time.sleep(EMAIL_DELAY_SECONDS)
+                    # Deduplication Check
+                    if is_invoice_sent(invoice['number']):
+                        print(f"    [SKIP] Already sent (found in local DB).")
+                        # We still update high-water mark below to ensure we move forward
                     else:
-                        print("    ✗ Skipped (No Email or Error)")
+                        if send_invoice_email(invoice):
+                             print(f"    ✓ Email sent to {invoice['email']}")
+                             mark_invoice_sent(invoice['number'])
+                             
+                             emails_sent_in_batch += 1
+                             
+                             # Throttling
+                             if i < len(new_invoices) - 1:
+                                 if emails_sent_in_batch >= BATCH_SIZE:
+                                     print(f"    ⏸ Batch pause: waiting {BATCH_PAUSE_SECONDS}s after {BATCH_SIZE} emails...")
+                                     time.sleep(BATCH_PAUSE_SECONDS)
+                                     emails_sent_in_batch = 0
+                                 else:
+                                     time.sleep(EMAIL_DELAY_SECONDS)
+                        else:
+                            print("    ✗ Skipped (No Email or Error)")
                     
-                    # Update high water mark
+                    # Update high water mark regardless of send status
                     if invoice['created_at'] > max_ts_in_batch:
                         max_ts_in_batch = invoice['created_at']
                 

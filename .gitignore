@@ -32,3 +32,30 @@ last_po_check.txt
 last_processed.txt
 processed_pos.json
 *.docx
+
+# Secrets & Config
+secrets.toml
+.env
+.env.local
+.env.example
+! .env.example
+
+# PII (Publicly Identifiable Information)
+customer_emails.json
+vendor_emails.json
+
+# Databases
+*.db
+sent_invoices.db
+
+# Generated Reports & Temp Files
+*.pdf
+*.html
+debug_search.log
+logs/
+data/
+notifications/
+email_preview.html
+email_preview_real.html
+daily_production_report.html
+daily_production_report.pdf

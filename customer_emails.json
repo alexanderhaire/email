@@ -1,14 +1,6 @@
 {
-    "HAPCARSON": {
-        "to": "alexh@chemicaldynamics.com",
-        "cc": ""
-    },
     "TEST-CUST": {
         "to": "test@example.com",
-        "cc": ""
-    },
-    "AGRIBUSI": {
-        "to": "janec@chemicaldynamics.com",
         "cc": ""
     },
     "CCCSEED": {
@@ -19,28 +11,12 @@
         "to": "janec@chemicaldynamics.com",
         "cc": ""
     },
-    "PORTER HA": {
-        "to": "janec@chemicaldynamics.com",
-        "cc": ""
-    },
-    "SOUTHERNHILL": {
-        "to": "alexh@chemicaldynamics.com",
-        "cc": ""
-    },
-    "FORTGREENFARMS": {
-        "to": "alexh@chemicaldynamics.com",
-        "cc": ""
-    },
-    "TRIANGLE": {
-        "to": "lindseys@chemicaldyanmics.com, janec@chemicaldynamics.com, grbyrd@trianglecc.com, dlming@trianglecc.com",
-        "cc": ""
-    },
     "PETROCAN": {
         "to": "Amanda.Gyles@HFSinclair.com; lindseys@chemicaldynamics.com",
         "cc": ""
     },
     "MAYO": {
-        "to": "erik@mayoag.com; layla@mayoag.com; ar@chemicaldynamics.com",
+        "to": "erik@mayoag.com, layla@mayoag.com, ar@chemicaldynamics.com",
         "cc": ""
     },
     "GOLFVENTURES": {
@@ -65,6 +41,70 @@
     },
     "MPBFARMS": {
         "to": "lpippin@strawberryexchange.com, PAstin@strawberryexchange.com, suzanne@strawberryexchange.com",
+        "cc": ""
+    },
+    "BARNESFE": {
+        "to": "office@barnesfertilizers.com",
+        "cc": ""
+    },
+    "AGRIBUSI": {
+        "to": "cortney@agri-b.com",
+        "cc": ""
+    },
+    "JRMINC": {
+        "to": "ap@jrmonline.com, sales@jrmonline.com, sandra.mooneyham@jrmonline.com, coles@chemicaldynamics.com, davidc@chemicaldynamics.com",
+        "cc": ""
+    },
+    "TRIANGLE": {
+        "to": "accountspayable@triangle.com",
+        "cc": ""
+    },
+    "DURGAFARMS": {
+        "to": "jrrajug@gmail.com",
+        "cc": ""
+    },
+    "SRISAIAY": {
+        "to": "jrrajug@gmail.com",
+        "cc": ""
+    },
+    "GAONA, ESPER": {
+        "to": "egaona1978@gmail.com",
+        "cc": ""
+    },
+    "FLORIDAGAR": {
+        "to": "floridagardens@bellsouth.net",
+        "cc": ""
+    },
+    "COUNCILO": {
+        "to": "cole@counciloxford.com, jsimmons2322@gmail.com",
+        "cc": ""
+    },
+    "GOLDENRIDGE": {
+        "to": "shane.bevilacqua@gmail.com",
+        "cc": ""
+    },
+    "MERCEDCH": {
+        "to": "dee@berryredfarms.com",
+        "cc": ""
+    },
+    "M&GFARMS": {
+        "to": "mandgberryfarms@gmail.com",
+        "cc": ""
+    },
+    "FANCYFAR": {
+        "to": "denise@fancyfarms.com",
+        "cc": ""
+    },
+    "RUSSTECH": {
+        "to": "Amy@russtech.com",
+        "cc": ""
+    },
+    "SOUTHERNHILL": {
+        "to": "magda.g@southernhillfarms.com",
+        "cc": ""
+    },
+    "SOUTHERN": {
+        "to": "irene.brooks@southernag.com, darrin.diem@southernag.com",
         "cc": ""
     }
 }

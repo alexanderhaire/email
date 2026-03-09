@@ -11,4 +11,10 @@ start /B "C:\Users\alexh\AppData\Local\Programs\Python\Python312\python.exe" inv
 echo 3. Starting Purchase Order Monitor...
 start /B "C:\Users\alexh\AppData\Local\Programs\Python\Python312\python.exe" po_emailer.py
 
+echo 4. Starting Raw Material Monitor...
+start /B .venv\Scripts\python.exe scripts\raw_material_monitor.py
+
+echo 5. Starting Daily Production Report Monitor...
+start /B "C:\Users\alexh\AppData\Local\Programs\Python\Python312\python.exe" schedule_daily_report.py
+
 pause
