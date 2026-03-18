@@ -15,14 +15,6 @@
         "to": "Amanda.Gyles@HFSinclair.com; lindseys@chemicaldynamics.com",
         "cc": ""
     },
-    "MAYO": {
-        "to": "erik@mayoag.com, layla@mayoag.com, ar@chemicaldynamics.com",
-        "cc": ""
-    },
-    "GOLFVENTURES": {
-        "to": "deliveryconfirmation@golfv.com, dwilliams@mggi.com, coles@chemicaldynamics.com, ar@chemicaldynamics.com, davidc@chemicaldynamics.com",
-        "cc": ""
-    },
     "COASTALAGSUPPLY": {
         "to": "lhanna@coastagsupply.com;robin@highlandag.com;lindseys@chemicaldynamics.com",
         "cc": ""
@@ -105,6 +97,26 @@
     },
     "SOUTHERN": {
         "to": "irene.brooks@southernag.com, darrin.diem@southernag.com",
+        "cc": ""
+    },
+    "GRIFFINF": {
+        "to": "jmannis@bhgriffin.com, sbarber@bhgriffin.com",
+        "cc": ""
+    },
+    "GREENWAY": {
+        "to": "greenway18@aol.com, greenwayorders@aol.com",
+        "cc": ""
+    },
+    "GOLFVENTURES": {
+        "to": "deliveryconfirmation@golfv.com, dwilliams@mggi.com, coles@chemicaldynamics.com, davidc@chemicaldynamics.com",
+        "cc": ""
+    },
+    "MAYO": {
+        "to": "erik@mayoag.com, layla@mayoag.com",
+        "cc": ""
+    },
+    "SOUTHERNSTATES": {
+        "to": "rodney.white@sscoop.com,coles@chemicaldynamics.com",
         "cc": ""
     }
 }

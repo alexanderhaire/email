@@ -17,7 +17,7 @@ def fetch_on_hand_by_item(cursor: pyodbc.Cursor, items: list[str], location: str
 
     placeholders = ", ".join("?" for _ in filtered)
     params = [*filtered, location] if location else filtered
-    location_clause = " AND LOCNCODE = ?" if location else ""
+    location_clause = " AND RTRIM(LOCNCODE) = ?" if location else ""
     query = f"""
         SELECT ITEMNMBR, SUM(QTYONHND) AS OnHand
         FROM IV00102
@@ -28,7 +28,7 @@ def fetch_on_hand_by_item(cursor: pyodbc.Cursor, items: list[str], location: str
     try:
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        on_hand = {row.ITEMNMBR: decimal_or_zero(row.OnHand) for row in rows}
+        on_hand = {row.ITEMNMBR.strip(): decimal_or_zero(row.OnHand) for row in rows}
         return on_hand, sql_preview
     except pyodbc.Error as err:
         LOGGER.warning("Failed to fetch on-hand quantities: %s", err)
@@ -45,7 +45,7 @@ def fetch_open_po_supply(cursor: pyodbc.Cursor, items: list[str], location: str 
 
     placeholders = ", ".join("?" for _ in filtered)
     params = [*filtered, location] if location else filtered
-    location_clause = " AND LOCNCODE = ?" if location else ""
+    location_clause = " AND RTRIM(LOCNCODE) = ?" if location else ""
     query = f"""
         SELECT ITEMNMBR, SUM(QTYORDER) AS OpenPOQty
         FROM POP10110
@@ -146,6 +146,54 @@ def fetch_recursive_bom_for_item(cursor: pyodbc.Cursor, parent_item: str) -> tup
         return rows, sql_preview
     except pyodbc.Error as err:
         LOGGER.warning("Failed to fetch recursive BOM for item %s: %s", parent_item, err)
+        return [], sql_preview
+
+
+def fetch_recent_vendors_for_item(cursor: pyodbc.Cursor, item_number: str, top_n: int = 3) -> tuple[list, str]:
+    """Return the N most recently ordered vendors for an item (IV00103 + PM00200)."""
+    if not item_number:
+        return [], ""
+
+    query = """
+        SELECT TOP (?) iv.VENDORID, COALESCE(v.VENDNAME, iv.VENDORID) AS VendorName, iv.LSTORDDT
+        FROM IV00103 iv
+        LEFT JOIN PM00200 v ON iv.VENDORID = v.VENDORID
+        WHERE iv.ITEMNMBR = ?
+        ORDER BY iv.LSTORDDT DESC
+    """
+    params = [top_n, item_number]
+    sql_preview = format_sql_preview(query, params)
+    try:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return rows, sql_preview
+    except pyodbc.Error as err:
+        LOGGER.warning("Failed to fetch vendors for item %s: %s", item_number, err)
+        return [], sql_preview
+
+
+def fetch_cost_variance_items(cursor: pyodbc.Cursor, item_classes: list[str]) -> tuple[list, str]:
+    """Return active items where current cost exceeds standard cost, ordered by variance descending."""
+    if not item_classes:
+        return [], ""
+
+    placeholders = ", ".join("?" for _ in item_classes)
+    query = f"""
+        SELECT i.ITEMNMBR, i.ITEMDESC, i.ITMCLSCD, i.STNDCOST, i.CURRCOST
+        FROM IV00101 i
+        WHERE i.INACTIVE = 0
+          AND i.STNDCOST > 0
+          AND i.CURRCOST > i.STNDCOST
+          AND i.ITMCLSCD IN ({placeholders})
+        ORDER BY (i.CURRCOST - i.STNDCOST) DESC
+    """
+    sql_preview = format_sql_preview(query, item_classes)
+    try:
+        cursor.execute(query, item_classes)
+        rows = cursor.fetchall()
+        return rows, sql_preview
+    except pyodbc.Error as err:
+        LOGGER.warning("Failed to fetch cost variance items: %s", err)
         return [], sql_preview
 
 

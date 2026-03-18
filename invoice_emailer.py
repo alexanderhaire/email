@@ -119,7 +119,7 @@ def get_new_invoices_since(conn, last_timestamp):
     cursor = conn.cursor()
     
     query = """
-    SELECT 
+    SELECT
         h.SOPNUMBE as InvoiceNumber,
         h.DOCDATE as InvoiceDate,
         h.DOCAMNT as Amount,
@@ -131,12 +131,31 @@ def get_new_invoices_since(conn, last_timestamp):
         c.CUSTNAME as CustomerName,
         h.CSTPONBR as PONumber,
         h.DEX_ROW_TS as CreatedAt,
-        COALESCE(inet.EmailToAddress, inet.INET1) as CustomerEmail
+        COALESCE(inet.EmailToAddress, inet.INET1) as CustomerEmail,
+        -- Bill-To address (customer primary address)
+        bill.CNTCPRSN as BillToContact,
+        bill.ADDRESS1 as BillToAddress1,
+        bill.ADDRESS2 as BillToAddress2,
+        bill.CITY as BillToCity,
+        bill.STATE as BillToState,
+        bill.ZIP as BillToZip,
+        -- Ship-To address (from invoice ship-to code)
+        ship.CNTCPRSN as ShipToContact,
+        ship.ADDRESS1 as ShipToAddress1,
+        ship.ADDRESS2 as ShipToAddress2,
+        ship.CITY as ShipToCity,
+        ship.STATE as ShipToState,
+        ship.ZIP as ShipToZip,
+        h.PRSTADCD as ShipToCode
     FROM SOP30200 h
     INNER JOIN RM00101 c ON h.CUSTNMBR = c.CUSTNMBR
-    LEFT JOIN SY01200 inet ON inet.Master_Type = 'CUS' 
-        AND inet.Master_ID = h.CUSTNMBR 
+    LEFT JOIN SY01200 inet ON inet.Master_Type = 'CUS'
+        AND inet.Master_ID = h.CUSTNMBR
         AND inet.ADRSCODE = c.ADRSCODE
+    LEFT JOIN RM00102 bill ON bill.CUSTNMBR = h.CUSTNMBR
+        AND bill.ADRSCODE = c.ADRSCODE
+    LEFT JOIN RM00102 ship ON ship.CUSTNMBR = h.CUSTNMBR
+        AND ship.ADRSCODE = h.PRSTADCD
     WHERE h.SOPTYPE = 3  -- Invoice type
     AND h.VOIDSTTS = 0   -- Not voided
     AND h.DEX_ROW_TS > ? -- STRICTLY GREATER THAN last check
@@ -164,7 +183,25 @@ def get_new_invoices_since(conn, last_timestamp):
                 'customer_name': row.CustomerName.strip(),
                 'email': row.CustomerEmail.strip() if row.CustomerEmail else None,
                 'created_at': row.CreatedAt,
-                'lines': lines
+                'lines': lines,
+                'bill_to': {
+                    'name': row.CustomerName.strip(),
+                    'contact': row.BillToContact.strip() if row.BillToContact else '',
+                    'address1': row.BillToAddress1.strip() if row.BillToAddress1 else '',
+                    'address2': row.BillToAddress2.strip() if row.BillToAddress2 else '',
+                    'city': row.BillToCity.strip() if row.BillToCity else '',
+                    'state': row.BillToState.strip() if row.BillToState else '',
+                    'zip': row.BillToZip.strip() if row.BillToZip else '',
+                },
+                'ship_to': {
+                    'name': row.CustomerName.strip(),
+                    'contact': row.ShipToContact.strip() if row.ShipToContact else '',
+                    'address1': row.ShipToAddress1.strip() if row.ShipToAddress1 else '',
+                    'address2': row.ShipToAddress2.strip() if row.ShipToAddress2 else '',
+                    'city': row.ShipToCity.strip() if row.ShipToCity else '',
+                    'state': row.ShipToState.strip() if row.ShipToState else '',
+                    'zip': row.ShipToZip.strip() if row.ShipToZip else '',
+                },
             })
         return invoices
     except Exception as e:
@@ -196,6 +233,23 @@ def load_global_config():
         except:
             pass
     return {}
+
+def html_to_pdf(html_content, output_filename):
+    """Convert invoice HTML to PDF using Playwright"""
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html_content)
+        page.pdf(
+            path=output_filename,
+            format="A4",
+            print_background=True,
+            margin={"top": "20px", "right": "20px", "bottom": "20px", "left": "20px"}
+        )
+        browser.close()
+    return os.path.abspath(output_filename)
+
 
 def send_invoice_email(invoice):
     """Send invoice notification email via Resend"""
@@ -277,9 +331,47 @@ def send_invoice_email(invoice):
 
     # Format date properly
     invoice_date = invoice['date'].strftime('%B %d, %Y') if invoice['date'] else 'N/A'
-    po_display = invoice['po_number'] if invoice['po_number'] else '—'
+    po_display = invoice['po_number'] if invoice['po_number'] else '\u2014'
 
-    # Format the email
+    # Build Bill-To address HTML
+    bt = invoice.get('bill_to', {})
+    bill_to_html = f'<h3 style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">{bt.get("name", invoice["customer_name"])}</h3>'
+    if bt.get('contact'):
+        bill_to_html += f'<p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">{bt["contact"]}</p>'
+    if bt.get('address1'):
+        bill_to_html += f'<p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">{bt["address1"]}</p>'
+    if bt.get('address2'):
+        bill_to_html += f'<p style="margin: 2px 0 0 0; color: #64748b; font-size: 14px;">{bt["address2"]}</p>'
+    csz = []
+    if bt.get('city'):
+        csz.append(bt['city'])
+    if bt.get('state'):
+        csz.append(bt['state'])
+    if bt.get('zip'):
+        csz[-1] = csz[-1] + "  " + bt['zip'] if csz else bt['zip']
+    if csz:
+        bill_to_html += f'<p style="margin: 2px 0 0 0; color: #64748b; font-size: 14px;">{", ".join(csz)}</p>'
+
+    # Build Ship-To address HTML
+    st = invoice.get('ship_to', {})
+    ship_to_html = f'<h3 style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">{st.get("name", invoice["customer_name"])}</h3>'
+    if st.get('contact'):
+        ship_to_html += f'<p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">{st["contact"]}</p>'
+    if st.get('address1'):
+        ship_to_html += f'<p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">{st["address1"]}</p>'
+    if st.get('address2'):
+        ship_to_html += f'<p style="margin: 2px 0 0 0; color: #64748b; font-size: 14px;">{st["address2"]}</p>'
+    scsz = []
+    if st.get('city'):
+        scsz.append(st['city'])
+    if st.get('state'):
+        scsz.append(st['state'])
+    if st.get('zip'):
+        scsz[-1] = scsz[-1] + "  " + st['zip'] if scsz else st['zip']
+    if scsz:
+        ship_to_html += f'<p style="margin: 2px 0 0 0; color: #64748b; font-size: 14px;">{", ".join(scsz)}</p>'
+
+    # Format the invoice HTML (used for both email body and PDF)
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -293,7 +385,7 @@ def send_invoice_email(invoice):
                      width="220"
                      alt="Chemical Dynamics Inc."
                      style="display: inline-block; border: 0; outline: none; text-decoration: none; height: auto; max-width: 220px;" />
-                <p style="margin: 10px 0 0 0; color: #64748b; font-size: 13px;">P.O. Box 486<br>Plant City, FL 33564-0468<br>Phone: 1-813-752-4960</p>
+                <p style="margin: 10px 0 0 0; color: #64748b; font-size: 13px;">P.O. Box 486<br>Plant City, FL 33564-0468<br>Phone: 1-813-752-4950</p>
             </div>
 
             <!-- Company Header -->
@@ -310,7 +402,7 @@ def send_invoice_email(invoice):
                     </tr>
                 </table>
             </div>
-            
+
             <!-- Invoice Details Banner -->
             <div style="background: #f8fafc; padding: 30px 40px; border-bottom: 1px solid #f0f0f0;">
                 <table width="100%">
@@ -339,12 +431,11 @@ def send_invoice_email(invoice):
                     <tr>
                         <td width="50%" style="vertical-align: top; padding-right: 20px;">
                              <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Bill To</p>
-                             <h3 style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">{invoice['customer_name']}</h3>
-                             <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Customer ID: {invoice['customer_id']}</p>
+                             {bill_to_html}
                         </td>
                         <td width="50%" style="vertical-align: top; padding-left: 20px;">
                              <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px;">Ship To</p>
-                             <h3 style="margin: 0; color: #334155; font-size: 16px; font-weight: 600;">{invoice['customer_name']}</h3>
+                             {ship_to_html}
                         </td>
                     </tr>
                 </table>
@@ -400,27 +491,38 @@ def send_invoice_email(invoice):
             <div style="background: #f8fafc; padding: 30px 40px; border-top: 1px solid #f0f0f0;">
                 <h4 style="margin: 0 0 10px 0; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase;">Terms & Conditions</h4>
                 <p style="margin: 0; color: #64748b; font-size: 11px; line-height: 1.6; text-align: justify;">
-                    TERMS: NET 30 DAYS. A finance charge of 1½% per month (18% per annum) will be charged on all past due accounts. 
-                    In the event it becomes necessary to enforce collection of this invoice, the purchaser agrees to pay all costs 
+                    TERMS: NET 30 DAYS. A finance charge of 1\u00bd% per month (18% per annum) will be charged on all past due accounts.
+                    In the event it becomes necessary to enforce collection of this invoice, the purchaser agrees to pay all costs
                     of collection, including reasonable attorney's fees. "WE APPRECIATE YOUR BUSINESS"
                 </p>
-                
+
                 <div style="margin-top: 20px; text-align: center; color: #94a3b8; font-size: 12px;">
                     <p style="margin: 0;">Chemical Dynamics, Inc. &bull; 4206 Business Lane &bull; Plant City, FL 33566</p>
                 </div>
             </div>
-            
+
         </div>
-        
+
     </body>
     </html>
     """
-    
+
+    # Generate PDF attachment
+    pdf_filename = f"Invoice_{invoice['number']}.pdf"
+    pdf_path = None
+    try:
+        pdf_path = html_to_pdf(html_content, pdf_filename)
+        print(f"    [PDF] Generated: {pdf_filename}")
+    except Exception as e:
+        print(f"    [WARN] PDF generation failed, sending without attachment: {e}")
+
     # FINAL SAFETY CHECK
     if REDIRECT_EMAILS and final_to != [TEST_EMAIL_RECIPIENT]:
         print(f"    [CRITICAL SAFETY] Attempted to send to {final_to} but REDIRECT_EMAILS is True. BLOCKED.")
+        if pdf_path and os.path.exists(pdf_filename):
+            os.remove(pdf_filename)
         return False
-        
+
     # Retry Loop for Network Reliability
     max_retries = 3
     for attempt in range(1, max_retries + 1):
@@ -431,21 +533,38 @@ def send_invoice_email(invoice):
                 "subject": f"{subject_prefix}Invoice #{invoice['number']} from {FROM_NAME}",
                 "html": html_content
             }
-            
+
             if final_cc:
                 email_params["cc"] = final_cc
 
+            # Attach PDF if generated
+            if pdf_path and os.path.exists(pdf_path):
+                with open(pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
+                email_params["attachments"] = [{
+                    "filename": pdf_filename,
+                    "content": list(pdf_bytes)
+                }]
+
             resend.Emails.send(email_params)
+
+            # Cleanup temp PDF
+            if pdf_path and os.path.exists(pdf_path):
+                os.remove(pdf_path)
+
             return True
-            
+
         except Exception as e:
-            print(f"    ⚠ Attempt {attempt}/{max_retries} failed: {e}")
+            print(f"    \u26a0 Attempt {attempt}/{max_retries} failed: {e}")
             if attempt < max_retries:
                 wait_time = 2 * attempt # Exponential backoff: 2s, 4s
                 print(f"      Retrying in {wait_time}s...")
                 time.sleep(wait_time)
             else:
-                print(f"    ✗ Failed after {max_retries} attempts.")
+                print(f"    \u2717 Failed after {max_retries} attempts.")
+                # Cleanup temp PDF on final failure
+                if pdf_path and os.path.exists(pdf_path):
+                    os.remove(pdf_path)
                 return False
 
 
