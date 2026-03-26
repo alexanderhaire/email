@@ -33,7 +33,7 @@ def send_daily_report():
 
     params = {
         "from": f"{FROM_NAME} <{FROM_EMAIL}>",
-        "to": ["alexh@chemicaldynamics.com"],
+        "to": ["alexh@chemicaldynamics.com", "benc@chemicaldynamics.com"],
         "subject": "Daily Production Report",
         "html": html_content
     }

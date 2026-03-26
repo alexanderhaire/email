@@ -32,7 +32,7 @@ setup_logging(enable_console=True, enable_file=True)
 # State file to track which items we've already alerted on
 STATE_FILE = Path(__file__).parent.parent / "data" / "raw_material_state.json"
 
-RAW_MATERIAL_CLASSES = ['RAWMATT', 'RAWMATNTE', 'RAWMATNT']
+RAW_MATERIAL_CLASSES = ['RAWMATT', 'RAWMATNTE', 'RAWMATNT', 'CONTAINERS']
 
 
 class ItemObject:

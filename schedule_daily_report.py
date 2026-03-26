@@ -4,7 +4,7 @@ import datetime
 import pytz
 from generate_daily_production_report import generate_report, html_to_pdf, generate_ai_summary, send_report_email
 
-RECIPIENTS = [alexh@chemicaldynamics.com]
+RECIPIENTS = ["alexh@chemicaldynamics.com", "benc@chemicaldynamics.com"]
 
 def job():
     print(f"[{datetime.datetime.now()}] Starting scheduled daily report job...")

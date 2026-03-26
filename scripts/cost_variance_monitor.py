@@ -29,7 +29,7 @@ LOGGER = get_logger(__name__)
 setup_logging(enable_console=True, enable_file=True)
 
 STATE_FILE = Path(__file__).parent.parent / "data" / "cost_variance_state.json"
-RAW_MATERIAL_CLASSES = ["RAWMATT", "RAWMATNTE", "RAWMATNT"]
+RAW_MATERIAL_CLASSES = ["RAWMATT", "RAWMATNTE", "RAWMATNT", "CONTAINERS"]
 
 
 def get_cost_variance_items() -> list[dict]:
